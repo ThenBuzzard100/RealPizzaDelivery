@@ -13,7 +13,7 @@ using System.Collections.Generic;
 /// </summary>
 public class PizzeriaFullBuilder : EditorWindow
 {
-    private float introDuration = 75f;
+    private float introDuration = 60f;
     private float rotationSmooth = 4f;
     private float lookAhead = 0.04f;
     private bool loopIntro = false;
@@ -25,10 +25,10 @@ public class PizzeriaFullBuilder : EditorWindow
     private Dictionary<string, Material> mats = new Dictionary<string, Material>();
     private Shader shader;
 
-    [MenuItem("Tools/Pizzeria/IntroSequence Builder")]
+    [MenuItem("Tools/Pizzeria/Build Everything")]
     public static void ShowWindow()
     {
-        var w = GetWindow<PizzeriaFullBuilder>("🍕 Intro Builder");
+        var w = GetWindow<PizzeriaFullBuilder>("🍕 Build Everything");
         w.minSize = new Vector2(380, 420);
     }
 
@@ -37,7 +37,7 @@ public class PizzeriaFullBuilder : EditorWindow
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
 
         EditorGUILayout.Space(10);
-        GUILayout.Label("🍕 IntroSequence Builder", new GUIStyle(EditorStyles.boldLabel)
+        GUILayout.Label("🍕 Pizzeria — Build Everything", new GUIStyle(EditorStyles.boldLabel)
         { fontSize = 15, alignment = TextAnchor.MiddleCenter });
         EditorGUILayout.Space(6);
 
@@ -89,27 +89,7 @@ public class PizzeriaFullBuilder : EditorWindow
             var scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
             CreateMaterials(matFolder);
-            var p = new GameObject("--- WORLD ---");
-            // Heavy hardware details on the roof
-            BuildHVAC(V(4, 6, 12), 0, p, "HVAC_1");
-            BuildHVAC(V(-4, 6, 12), 45, p, "HVAC_2");
-            BuildHVAC(V(10, 6, 15), 90, p, "HVAC_3");
-
-            // Epic Neon Spinning Sign Core
-            var neonRoot = new GameObject("NeonSignSystem");
-            neonRoot.transform.parent = p.transform;
-            neonRoot.transform.localPosition = V(0, 7f, -1f);
-            C("SignMount", V(0, -0.5f, 0), V(0.3f, 1.5f, 0.3f), "Pole", neonRoot);
-            
-            var neonCyl = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            neonCyl.transform.parent = neonRoot.transform;
-            neonCyl.transform.localPosition = V(0, 0.7f, 0);
-            neonCyl.transform.localScale = V(4f, 0.4f, 4f);
-            neonCyl.transform.localRotation = Quaternion.Euler(90, 0, 0);
-            neonCyl.GetComponent<Renderer>().sharedMaterial = M("Awning");
-            neonCyl.AddComponent<NeonRotator>();
-            
-            BuildLobby(p);
+            BuildLobby();
             BuildKitchen();
             BuildKitchenDoors();
             BuildStreet();
@@ -159,8 +139,8 @@ public class PizzeriaFullBuilder : EditorWindow
         Mat(folder, "ChairSeat",      new Color(0.65f, 0.12f, 0.12f));
         Mat(folder, "BoothSeat",      new Color(0.60f, 0.10f, 0.10f));
         Mat(folder, "MenuBoard",      new Color(0.12f, 0.12f, 0.12f));
-        MatE(folder, "MenuScreen",    new Color(0.9f, 0.6f, 0.1f), new Color(1f, 0.7f, 0.1f) * 2.5f); // High attention glowing orange
-        MatE(folder, "LightBulb",     new Color(1f, 1f, 1f), new Color(1f, 0.95f, 0.8f) * 2f);
+        Mat(folder, "MenuScreen",     new Color(0.9f, 0.6f, 0.1f)); // High attention bright orange
+        Mat(folder, "LightBulb",      new Color(1f, 1f, 1f));
         Mat(folder, "CashRegister",   new Color(0.25f, 0.25f, 0.28f));
         Mat(folder, "TipJar",         new Color(0.7f, 0.85f, 0.9f));
         Mat(folder, "Plant",          new Color(0.20f, 0.50f, 0.15f));
@@ -176,7 +156,7 @@ public class PizzeriaFullBuilder : EditorWindow
         Mat(folder, "KitchenWall",    new Color(0.95f, 0.95f, 0.93f));
         Mat(folder, "KitchenCeiling", new Color(0.95f, 0.95f, 0.93f));
         Mat(folder, "Oven",           new Color(0.20f, 0.20f, 0.22f));
-        MatE(folder, "OvenMouth",     new Color(0.85f, 0.30f, 0.05f), new Color(1f, 0.4f, 0.1f) * 3f);
+        Mat(folder, "OvenMouth",      new Color(0.85f, 0.30f, 0.05f));
         Mat(folder, "PrepTable",      new Color(0.80f, 0.80f, 0.82f));
         Mat(folder, "Dough",          new Color(0.95f, 0.90f, 0.75f));
         Mat(folder, "CuttingBoard",   new Color(0.55f, 0.40f, 0.20f));
@@ -198,8 +178,8 @@ public class PizzeriaFullBuilder : EditorWindow
         Mat(folder, "Building2",      new Color(0.55f, 0.50f, 0.50f));
         Mat(folder, "Building3",      new Color(0.60f, 0.42f, 0.35f));
         Mat(folder, "BuildingTrim",   new Color(0.40f, 0.38f, 0.35f));
-        Mat(folder, "Window",         new Color(0.55f, 0.72f, 0.85f)); // Daylight window
-        Mat(folder, "WindowFrame",    new Color(0.15f, 0.13f, 0.10f));
+        Mat(folder, "Window",         new Color(0.55f, 0.72f, 0.85f));
+        Mat(folder, "WindowFrame",    new Color(0.35f, 0.33f, 0.30f));
         Mat(folder, "Awning",         new Color(0.70f, 0.15f, 0.10f));
         Mat(folder, "BldgDoor",       new Color(0.35f, 0.22f, 0.12f));
         Mat(folder, "House",          new Color(0.85f, 0.82f, 0.70f));
@@ -209,24 +189,12 @@ public class PizzeriaFullBuilder : EditorWindow
         Mat(folder, "Sign",           new Color(0.90f, 0.85f, 0.20f));
         Mat(folder, "Pole",           new Color(0.30f, 0.30f, 0.32f));
         Mat(folder, "Bench",          new Color(0.45f, 0.30f, 0.18f));
-        Mat(folder, "BenchFrame",     new Color(0.20f, 0.20f, 0.20f));
+        Mat(folder, "Hydrant",        new Color(0.80f, 0.15f, 0.08f));
         Mat(folder, "Mailbox",        new Color(0.15f, 0.20f, 0.55f));
         Mat(folder, "Crosswalk",      new Color(0.95f, 0.95f, 0.95f));
         Mat(folder, "Tree",           new Color(0.25f, 0.45f, 0.15f));
         Mat(folder, "Trunk",          new Color(0.40f, 0.28f, 0.15f));
         Mat(folder, "ACUnit",         new Color(0.60f, 0.60f, 0.62f));
-        
-        // City Details
-        Mat(folder, "CarRed",         new Color(0.7f, 0.05f, 0.05f));
-        Mat(folder, "CarSilver",      new Color(0.6f, 0.6f, 0.65f));
-        Mat(folder, "CarYellow",      new Color(0.9f, 0.7f, 0.1f));
-        Mat(folder, "Tires",          new Color(0.1f, 0.1f, 0.1f));
-        Mat(folder, "NPCShirt1",      new Color(0.2f, 0.3f, 0.6f));
-        Mat(folder, "NPCShirt2",      new Color(0.6f, 0.2f, 0.3f));
-        Mat(folder, "NPCPants",       new Color(0.2f, 0.2f, 0.2f));
-        Mat(folder, "NPCSkin",        new Color(0.9f, 0.8f, 0.7f));
-        Mat(folder, "Dumpster",       new Color(0.2f, 0.4f, 0.2f));
-        Mat(folder, "TrafficLight",   new Color(0.15f, 0.15f, 0.15f));
     }
 
     private void Mat(string folder, string name, Color color)
@@ -242,21 +210,9 @@ public class PizzeriaFullBuilder : EditorWindow
         else
         {
             mat.color = color;
-            mat.DisableKeyword("_EMISSION"); // Disable by default unless explicitly enabled
             EditorUtility.SetDirty(mat);
         }
         mats[name] = mat;
-    }
-
-    private void MatE(string folder, string name, Color color, Color emission)
-    {
-        Mat(folder, name, color);
-        if (mats.ContainsKey(name))
-        {
-            mats[name].EnableKeyword("_EMISSION");
-            mats[name].SetColor("_EmissionColor", emission);
-            EditorUtility.SetDirty(mats[name]);
-        }
     }
 
     private Material M(string name) => mats.ContainsKey(name) ? mats[name] : null;
@@ -265,8 +221,10 @@ public class PizzeriaFullBuilder : EditorWindow
     //  LOBBY (Z = 0 to 20, X = -10 to 10)
     // ════════════════════════════════════════════════════════════
 
-    private void BuildLobby(GameObject p)
+    private void BuildLobby()
     {
+        var p = new GameObject("--- LOBBY ---");
+
         // Floor & ceiling
         C("Lobby_Floor", V(0, -0.05f, 10), V(20, 0.1f, 20), "LobbyFloor", p);
         C("Lobby_Ceiling", V(0, 4, 10), V(20, 0.15f, 20), "LobbyCeiling", p);
@@ -569,288 +527,111 @@ public class PizzeriaFullBuilder : EditorWindow
     {
         var p = new GameObject("--- STREET ---");
 
-        // Ground - massive concrete block to support layout
-        C("Ground", V(-10f, -0.2f, -10f), V(160, 0.1f, 160), "Ground", p);
+        // Ground
+        C("Ground", V(0, -0.2f, -30), V(60, 0.1f, 60), "Ground", p);
 
-        // Main Street (Far left: X = -45) (Spans Z = -70 to 30)
-        C("MainRoad", V(-45, -0.08f, -20), V(8, 0.06f, 120), "Road", p);
-        for (int i = 0; i < 15; i++)
+        // Road
+        C("Road", V(0, -0.08f, -30), V(8, 0.06f, 60), "Road", p);
+
+        // Lane markings
+        for (int i = 0; i < 8; i++)
         {
-            float z = -75f + i * 8f;
-            C($"LaneMark_{i}", V(-45, -0.04f, z), V(0.2f, 0.02f, 3.5f), "LaneMark", p);
+            float z = -55f + i * 8f;
+            C($"LaneMark_{i}", V(0, -0.04f, z), V(0.2f, 0.02f, 3.5f), "LaneMark", p);
         }
 
-        // Sidewalks running along Main Street
-        C("Sidewalk_Main_L", V(-50.5f, -0.1f, -20), V(3, 0.12f, 120), "Sidewalk", p);
-        
-        // Right sidewalk cut out for the intersection (Intersection is at Z = -25)
-        C("Sidewalk_Main_R_Front", V(-39.5f, -0.1f, -55), V(3, 0.12f, 50), "Sidewalk", p);
-        C("Sidewalk_Main_R_Back", V(-39.5f, -0.1f, 15), V(3, 0.12f, 70), "Sidewalk", p);
-
-        // Driveway Intersection connecting Main Street tightly into the Lot
-        C("Intersection", V(-26.5f, -0.08f, -25f), V(29, 0.06f, 8), "Road", p);
-
-        // ── FRONT PARKING LOT ──
-        // Spans X = -12 to 12. Z = -35 to -2. Width 24, Length 33.
-        C("Lot_Asphalt", V(0f, -0.15f, -18.5f), V(24, 0.1f, 33), "Road", p);
-        
-        // Front Parking Spaces (Facing lobby)
-        for (int i = 0; i < 5; i++)
+        // Crosswalk in front of pizzeria
+        for (int i = 0; i < 6; i++)
         {
-            float x = -8f + i * 4f;
-            C($"LotLine_L_{i}", V(x, -0.09f, -6), V(0.2f, 0.02f, 5f), "LaneMark", p);
-            C($"LotBlocker_{i}", V(x + 2f, -0.05f, -3f), V(2f, 0.15f, 0.5f), "Sidewalk", p);
+            float x = -3f + i * 1.2f;
+            C($"Crosswalk_{i}", V(x, -0.04f, -3), V(0.5f, 0.02f, 2.5f), "Crosswalk", p);
         }
-        C($"LotLine_L_5", V(12f, -0.09f, -6), V(0.2f, 0.02f, 5f), "LaneMark", p);
 
-        // ── 5-LAYER CITY BUILDINGS ──
+        // Sidewalks
+        C("Sidewalk_L", V(-5.5f, -0.1f, -30), V(3, 0.12f, 60), "Sidewalk", p);
+        C("Sidewalk_R", V(5.5f, -0.1f, -30), V(3, 0.12f, 60), "Sidewalk", p);
+
+        // ── DETAILED BUILDINGS ──
         Material[] bldgMats = { M("Building1"), M("Building2"), M("Building3") };
         Random.InitState(42);
 
-        // Left side 5-layer thick
-        for (int layer = 0; layer < 5; layer++)
+        for (int i = 0; i < 6; i++)
         {
-            float curX = -60f - (layer * 14f);
-            for (int i = -2; i < 7; i++)
-            {
-                float z = -65f + i * 18f;
-                float hL = Random.Range(15f + layer * 15f, 75f + layer * 25f);
-                if (layer == 0)
-                    BuildDetailedBuilding($"BldgL_L0_{i}", V(curX, 0, z), 12, hL, 14, 0f, bldgMats[Mathf.Abs(i) % 3], p);
-                else {
-                    float jX = Random.Range(-3f, 3f);
-                    float jZ = Random.Range(-4f, 4f);
-                    BuildProxyBuilding($"BldgL_L{layer}_{i}", V(curX + jX, 0, z + jZ), 12, hL, 14, 0f, bldgMats[(Mathf.Abs(i) + layer) % 3], p);
-                }
-            }
-        }
-        
-        // Right side 5-layer thick
-        for (int layer = 0; layer < 5; layer++)
-        {
-            float curX = 30f + (layer * 14f);
-            for (int i = -2; i < 7; i++)
-            {
-                float z = -65f + i * 18f;
-                float hR = Random.Range(20f + layer * 15f, 65f + layer * 25f);
-                if (layer == 0)
-                    BuildDetailedBuilding($"BldgR_L0_{i}", V(curX, 0, z), 12, hR, 14, 180f, bldgMats[(Mathf.Abs(i) + 1) % 3], p);
-                else {
-                    float jX = Random.Range(-3f, 3f);
-                    float jZ = Random.Range(-4f, 4f);
-                    BuildProxyBuilding($"BldgR_L{layer}_{i}", V(curX + jX, 0, z + jZ), 12, hR, 14, 180f, bldgMats[(Mathf.Abs(i) + layer + 1) % 3], p);
-                }
-            }
+            float z = -55f + i * 10f;
+            float hL = Random.Range(5f, 10f);
+            float hR = Random.Range(5f, 10f);
+            float wL = Random.Range(5f, 7.5f);
+            float wR = Random.Range(5f, 7.5f);
+
+            // Left building
+            BuildDetailedBuilding($"BldgL_{i}", V(-13, 0, z), wL, hL, 7, true, bldgMats[i % 3], p);
+            // Right building
+            BuildDetailedBuilding($"BldgR_{i}", V(13, 0, z), wR, hR, 7, false, bldgMats[(i + 1) % 3], p);
         }
 
-        // Back wall 5-layer thick (Z=45 outwards)
-        for (int layer = 0; layer < 5; layer++)
-        {
-            float curZ = 45f + (layer * 14f);
-            for (int i = 0; i < 15; i++)
-            {
-                float x = -116f + i * 14.5f; // Span entire interlock
-                float hCenter = Random.Range(35f + layer * 15f, 95f + layer * 25f);
-                
-                if (layer == 0 && x > -60f && x < 30f) // Detailed only inside view
-                    BuildDetailedBuilding($"BldgBack_L0_{i}", V(x, 0, curZ), 13, hCenter, 14, 90f, bldgMats[i % 3], p);
-                else {
-                    float jX = Random.Range(-5f, 5f);
-                    float jZ = Random.Range(-3f, 3f);
-                    BuildProxyBuilding($"BldgBack_L{layer}_{i}", V(x + jX, 0, curZ + jZ), 13, hCenter, 14, 90f, bldgMats[(i + layer) % 3], p);
-                }
-            }
-        }
+        // ── DELIVERY HOUSE ──
+        C("House_Body", V(13, 2.5f, -55), V(8, 5, 7), "House", p);
+        C("House_Roof", V(13, 5.3f, -55), V(9, 0.5f, 8), "Roof", p);
+        C("House_Door", V(9.1f, 1.3f, -55), V(0.1f, 2.6f, 1.3f), "Door", p);
+        C("House_DoorFrame", V(9.1f, 1.3f, -55), V(0.12f, 2.8f, 1.5f), "BuildingTrim", p);
+        // House windows
+        C("House_Window_1", V(9.1f, 3, -53.5f), V(0.08f, 1, 0.8f), "Window", p);
+        C("House_WinFrame_1", V(9.1f, 3, -53.5f), V(0.1f, 1.1f, 0.9f), "WindowFrame", p);
+        C("House_Window_2", V(9.1f, 3, -56.5f), V(0.08f, 1, 0.8f), "Window", p);
+        C("House_WinFrame_2", V(9.1f, 3, -56.5f), V(0.1f, 1.1f, 0.9f), "WindowFrame", p);
+        // Porch
+        C("House_Porch", V(9, 0.05f, -55), V(2, 0.1f, 3), "Sidewalk", p);
 
-        // Front wall 5-layer thick (Z=-90 outwards)
-        for (int layer = 0; layer < 5; layer++)
-        {
-            float curZ = -90f - (layer * 14f);
-            for (int i = 0; i < 15; i++)
-            {
-                float x = -116f + i * 14.5f; 
-                float hFront = Random.Range(40f + layer * 15f, 100f + layer * 25f);
-                
-                if (layer == 0 && x > -60f && x < 30f)
-                    BuildDetailedBuilding($"BldgFront_L0_{i}", V(x, 0, curZ), 13, hFront, 14, -90f, bldgMats[i % 3], p);
-                else {
-                    float jX = Random.Range(-5f, 5f);
-                    float jZ = Random.Range(-3f, 3f);
-                    BuildProxyBuilding($"BldgFront_L{layer}_{i}", V(x + jX, 0, curZ + jZ), 13, hFront, 14, -90f, bldgMats[(i + layer) % 3], p);
-                }
-            }
-        }
-
-        // ── PIZZERIA CROSSWALK & SIDEWALK ──
-        C("Lobby_Sidewalk", V(0, -0.1f, -1.5f), V(26, 0.12f, 3), "Sidewalk", p);
+        // ── PIZZERIA FACADE ──
         C("Facade_Top", V(0, 4.5f, -0.3f), V(10, 2, 0.5f), "Facade", p);
         C("Facade_Sign", V(0, 5.2f, -0.65f), V(6, 0.8f, 0.1f), "Sign", p);
         C("Facade_Trim", V(0, 3.55f, -0.3f), V(10.2f, 0.15f, 0.55f), "BuildingTrim", p);
 
-        // ── CITY PROPS ──
-        // Dumpsters tucked securely around the far back left of the lot
-        C("Dumpster_1", V(-10f, 1f, -32f), V(3, 2, 2), "Dumpster", p);
-        C("Dumpster_2", V(-6f, 1f, -32f), V(3, 2, 2), "Dumpster", p);
-        
-        // Stop Signs rotated across the intersection
-        BuildStopSign(V(-40.5f, 0, -21f), 0f, p, "StopSign_1");
-        BuildStopSign(V(-40.5f, 0, -29f), 180f, p, "StopSign_2");
-
-        // Light poles outlining the long main street axis evenly
-        for (int i = -2; i < 8; i++)
+        // ── STREET FURNITURE ──
+        // Light poles
+        for (int i = 0; i < 6; i++)
         {
-            float z = -65f + i * 15f;
-            C($"Pole_L_{i}", V(-49.5f, 2.5f, z), V(0.12f, 5, 0.12f), "Pole", p);
-            C($"PoleArm_L_{i}", V(-49.2f, 4.8f, z), V(0.6f, 0.08f, 0.08f), "Pole", p);
-            C($"Pole_R_{i}", V(-40.5f, 2.5f, z), V(0.12f, 5, 0.12f), "Pole", p);
-            C($"PoleArm_R_{i}", V(-40.8f, 4.8f, z), V(0.6f, 0.08f, 0.08f), "Pole", p);
+            float z = -55f + i * 10f;
+            C($"Pole_L_{i}", V(-4.5f, 2.5f, z), V(0.12f, 5, 0.12f), "Pole", p);
+            C($"PoleArm_L_{i}", V(-4.2f, 4.8f, z), V(0.6f, 0.08f, 0.08f), "Pole", p);
+            C($"Pole_R_{i}", V(4.5f, 2.5f, z), V(0.12f, 5, 0.12f), "Pole", p);
+            C($"PoleArm_R_{i}", V(4.2f, 4.8f, z), V(0.6f, 0.08f, 0.08f), "Pole", p);
         }
 
-        // Detailed Street Decor and Props
-        BuildMicroDetails(p);
+        // Benches
+        BuildBench(V(-5.5f, 0, -15), 90f, p, "Bench_1");
+        BuildBench(V(5.5f, 0, -25), -90f, p, "Bench_2");
 
-        // Populate dynamic City Park in the massive gap on the right
-        BuildPark(p);
+        // Fire hydrant
+        C("Hydrant_Body", V(-4, 0.25f, -20), V(0.25f, 0.5f, 0.25f), "Hydrant", p);
+        C("Hydrant_Top", V(-4, 0.55f, -20), V(0.3f, 0.1f, 0.15f), "Hydrant", p);
 
-        // ── DYNAMIC CITY ENTITIES ──
-        // Cars now loop smoothly along the side street only, avoiding collisions completely
-        BuildVehicle(V(-47f, 0, -60), 0f, "CarRed", false, p);       // Inner lane (+Z)
-        BuildVehicle(V(-47f, 0, -30), 0f, "CarYellow", false, p);    // Inner lane (+Z)
-        BuildVehicle(V(-43f, 0, -10), 180f, "CarSilver", false, p);  // Outer lane (-Z)
-        BuildVehicle(V(-43f, 0, 20), 180f, "CarRed", false, p);      // Outer lane (-Z)
-        
-        // The Hero Vehicle (parks dynamically from Left Street -> Driveway -> Lot -> Spot 2)
-        BuildHeroVehicle(V(-47f, 0, -65), p);
+        // Mailbox
+        C("Mailbox_Post", V(5.5f, 0.5f, -10), V(0.1f, 1, 0.1f), "Pole", p);
+        C("Mailbox_Box", V(5.5f, 1.15f, -10), V(0.5f, 0.35f, 0.3f), "Mailbox", p);
 
-        // Parked Cars permanently resting in front of the lobby
-        BuildVehicle(V(-6, 0, -6f), 0f, "CarSilver", true, p);  // Spot 1
-        BuildVehicle(V(2, 0, -6f), 0f, "CarRed", true, p);      // Spot 3
-        BuildVehicle(V(6, 0, -6f), 0f, "CarYellow", true, p);   // Spot 4
-        BuildVehicle(V(10, 0, -6f), 0f, "CarSilver", true, p);   // Spot 5
-
-        // Pedestrians sticking specifically to main sidewalks
-        BuildNPC(V(-50.5f, 0, -50), 0f, "NPCShirt1", p);
-        BuildNPC(V(-39.5f, 0, 10), 180f, "NPCShirt2", p);
+        // Trees
+        BuildTree(V(-8, 0, -8), p, "Tree_1");
+        BuildTree(V(8, 0, -18), p, "Tree_2");
+        BuildTree(V(-8, 0, -35), p, "Tree_3");
+        BuildTree(V(8, 0, -45), p, "Tree_4");
     }
 
-    private void BuildPark(GameObject parent)
+    private void BuildDetailedBuilding(string name, Vector3 basePos, float w, float h, float d, bool facingRight, Material bodyMat, GameObject parent)
     {
-        var root = new GameObject("CityPark");
-        root.transform.parent = parent.transform;
-        
-        // Grass Base
-        C("Park_Grass", V(15, -0.1f, -42.5f), V(22, 0.15f, 57), "Ground", root);
+        float x = basePos.x, z = basePos.z;
 
-        // Walking Paths
-        C("Path_V", V(15, -0.05f, -42.5f), V(4, 0.1f, 57), "Sidewalk", root); // Vertical path down middle
-        C("Path_H1", V(15, -0.05f, -25f), V(22, 0.1f, 4), "Sidewalk", root); // Horizontal path top
-        C("Path_H2", V(15, -0.05f, -60f), V(22, 0.1f, 4), "Sidewalk", root); // Horizontal path bottom
+        // Main body
+        var body = C(name, V(x, h / 2, z), V(w, h, d), bodyMat, parent);
 
-        // Benches gracefully centered on concrete pads, completely facing path inwards
-        BuildBench(V(10.5f, 0, -32f), 0f, root, "ParkBench_1");
-        BuildBench(V(19.5f, 0, -32f), 180f, root, "ParkBench_2");
-        BuildBench(V(10.5f, 0, -52f), 0f, root, "ParkBench_3");
-        BuildBench(V(19.5f, 0, -52f), 180f, root, "ParkBench_4");
-        
-        // Fountain seating
-        BuildBench(V(15f, 0, -38f), 90f, root, "ParkBench_5");
-        BuildBench(V(15f, 0, -47f), -90f, root, "ParkBench_6");
+        // Trim at top
+        C(name + "_Trim", V(x, h + 0.05f, z), V(w + 0.2f, 0.15f, d + 0.1f), "BuildingTrim", parent);
 
-        // Park Fountain / Monument
-        C("FountainBase", V(15, 0f, -42.5f), V(6, 0.4f, 6), "Sidewalk", root);
-        C("FountainTier1", V(15, 0.4f, -42.5f), V(4, 0.4f, 4), "BuildingTrim", root);
-        C("FountainTier2", V(15, 0.8f, -42.5f), V(2, 0.8f, 2), "BuildingTrim", root);
-        C("FountainTop", V(15, 1.6f, -42.5f), V(1, 1f, 1), "Sidewalk", root);
+        // Base trim
+        C(name + "_BaseTrim", V(x, 0.15f, z), V(w + 0.1f, 0.3f, d + 0.05f), "BuildingTrim", parent);
 
-        // Playground Area
-        C("Sandbox", V(19, 0f, -65f), V(4, 0.2f, 4), "Dough", root);
-        C("SlideStairs", V(19, 0.8f, -64f), V(1, 1.6f, 1), "Awning", root);
-        C("SlideRamp", V(19, 0.4f, -66f), V(1, 0.8f, 2), "BoothSeat", root);
-
-        // Trash Cans & Street Lights inside park
-        C("TrashCan_1", V(12.5f, 0.5f, -28f), V(0.6f, 1f, 0.6f), "Dumpster", root);
-        C("TrashCan_2", V(12.5f, 0.5f, -57f), V(0.6f, 1f, 0.6f), "Dumpster", root);
-        
-        C("ParkLight_1_Pole", V(10f, 2.5f, -42.5f), V(0.12f, 5, 0.12f), "Pole", root);
-        C("ParkLight_1_Globe", V(10f, 5.2f, -42.5f), V(0.5f, 0.5f, 0.5f), "LightBulb", root);
-        
-        C("ParkLight_2_Pole", V(20f, 2.5f, -42.5f), V(0.12f, 5, 0.12f), "Pole", root);
-        C("ParkLight_2_Globe", V(20f, 5.2f, -42.5f), V(0.5f, 0.5f, 0.5f), "LightBulb", root);
-
-        // High Density Forest Blocks (Added strict collision bounds for paths)
-        Random.InitState(12345);
-        for (int x = 6; x < 26; x += 4)
-        {
-            for (int z = -68; z < -16; z += 5)
-            {
-                float jx = Random.Range(-1.5f, 1.5f);
-                float jz = Random.Range(-1.5f, 1.5f);
-                float treeX = x + jx;
-                float treeZ = z + jz;
-                
-                // Ensure trees don't overlap the intersecting walking paths or fountain
-                if (treeX > 11.5f && treeX < 18.5f) continue;
-                if (treeZ > -29f && treeZ < -21f) continue;
-                if (treeZ > -64f && treeZ < -56f) continue;
-                
-                BuildTree(V(treeX, 0, treeZ), root, $"ParkTree_{x}_{z}");
-                
-                float bushX = treeX + 1.2f;
-                float bushZ = treeZ + 0.8f;
-                
-                // Ensure bushes do not bleed onto sidewalks
-                if (bushX > 12f && bushX < 18f) continue;
-                if (bushZ > -28f && bushZ < -22f) continue;
-                if (bushZ > -63f && bushZ < -57f) continue;
-
-                C($"Bush_{x}_{z}", V(bushX, 0.5f, bushZ), V(1.5f, 1f, 1.5f), "Plant", root);
-            }
-        }
-    }
-
-    private void BuildStopSign(Vector3 pos, float rotY, GameObject parent, string name)
-    {
-        var root = new GameObject(name);
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = pos;
-        root.transform.localRotation = Quaternion.Euler(0, rotY, 0);
-
-        C("Pole", V(0, 1.5f, 0), V(0.12f, 3, 0.12f), "Pole", root);
-        
-        var sign = C("SignBd", V(0, 2.7f, 0.08f), V(0.8f, 0.8f, 0.05f), "BoothSeat", root);
-        sign.transform.localRotation = Quaternion.Euler(0, 0, 45); // Diamond shaped Stop Sign
-    }
-
-    private void BuildProxyBuilding(string name, Vector3 basePos, float w, float h, float d, float rotY, Material bodyMat, GameObject parent)
-    {
-        var root = new GameObject(name + "_Proxy");
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = basePos;
-        root.transform.localRotation = Quaternion.Euler(0, rotY, 0);
-
-        // Core monolithic structure mimicking detail volume roughly
-        C("Body", V(0, h / 2, 0), V(w - 0.5f, h, d - 0.5f), bodyMat, root); // Slight gap scaling
-        
-        if (Random.value > 0.4f) 
-        {
-            C("Trim", V(0, h + 0.05f, 0), V(w - 0.2f, 0.15f, d - 0.2f), "BuildingTrim", root);
-        }
-    }
-
-    private void BuildDetailedBuilding(string name, Vector3 basePos, float w, float h, float d, float rotY, Material bodyMat, GameObject parent)
-    {
-        var root = new GameObject(name);
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = basePos;
-        root.transform.localRotation = Quaternion.Euler(0, rotY, 0);
-
-        // Core structure
-        C("Body", V(0, h / 2, 0), V(w, h, d), bodyMat, root);
-        C("Trim", V(0, h + 0.05f, 0), V(w + 0.2f, 0.15f, d + 0.1f), "BuildingTrim", root);
-        C("BaseTrim", V(0, 0.15f, 0), V(w + 0.1f, 0.3f, d + 0.05f), "BuildingTrim", root);
-
-        // Windows (Front face locally +X)
-        float faceSide = w / 2f + 0.06f; 
+        // Windows (2 rows, 2 columns per floor)
+        float faceSide = facingRight ? (x + w / 2f + 0.06f) : (x - w / 2f - 0.06f);
         int floors = Mathf.FloorToInt(h / 3f);
 
         for (int floor = 0; floor < floors; floor++)
@@ -858,22 +639,26 @@ public class PizzeriaFullBuilder : EditorWindow
             float winY = 2f + floor * 3f;
             for (int col = 0; col < 2; col++)
             {
-                float winZ = -1.5f + col * 3f;
-                string wn = $"Win_{floor}_{col}";
-                
-                // Restored to standard daylight blue windows (no emission)
-                C(wn, V(faceSide, winY, winZ), V(0.08f, 1, 0.7f), "Window", root);
-                C(wn + "_Frame", V(faceSide, winY, winZ), V(0.1f, 1.15f, 0.85f), "WindowFrame", root);
+                float winZ = z - 1.5f + col * 3f;
+                string wn = $"{name}_Win_{floor}_{col}";
+                C(wn, V(faceSide, winY, winZ), V(0.08f, 1, 0.7f), "Window", parent);
+                C(wn + "_Frame", V(faceSide, winY, winZ), V(0.1f, 1.15f, 0.85f), "WindowFrame", parent);
             }
         }
 
-        // Street Door
-        C("Door", V(faceSide, 1, 0), V(0.08f, 2, 1), "BldgDoor", root);
-        C("Awning", V(faceSide + 0.3f, 2.2f, 0), V(0.8f, 0.08f, 1.6f), "Awning", root);
+        // Door on ground floor
+        float doorX = facingRight ? (x + w / 2f + 0.06f) : (x - w / 2f - 0.06f);
+        C(name + "_Door", V(doorX, 1, z), V(0.08f, 2, 1), "BldgDoor", parent);
 
+        // Awning above door
+        C(name + "_Awning", V(doorX + (facingRight ? 0.3f : -0.3f), 2.2f, z),
+            V(0.8f, 0.08f, 1.6f), "Awning", parent);
+
+        // AC unit on side
         if (h > 6)
         {
-            C("AC", V(faceSide + 0.3f, h * 0.6f, d / 2f - 0.5f), V(0.5f, 0.4f, 0.6f), "ACUnit", root);
+            C(name + "_AC", V(doorX + (facingRight ? 0.3f : -0.3f), h * 0.6f, z + d/2f - 0.5f),
+                V(0.5f, 0.4f, 0.6f), "ACUnit", parent);
         }
     }
 
@@ -900,80 +685,6 @@ public class PizzeriaFullBuilder : EditorWindow
         C(name + "_Canopy", V(pos.x, 3, pos.z), V(2.5f, 2, 2.5f), "Tree", parent);
     }
 
-    private void BuildVehicle(Vector3 startPos, float rotY, string colorMat, bool parked, GameObject parent)
-    {
-        var root = new GameObject("CityVehicle_" + colorMat);
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = startPos;
-        root.transform.localRotation = Quaternion.Euler(0, rotY, 0);
-
-        C("Body", V(0, 0.5f, 0), V(1.8f, 0.6f, 4f), colorMat, root);
-        C("Cab", V(0, 1.1f, -0.2f), V(1.6f, 0.5f, 2f), colorMat, root);
-        C("Windshield", V(0, 1.1f, 0.85f), V(1.5f, 0.4f, 0.1f), "Window", root);
-        
-        // Tires
-        C("TireFR", V(0.9f, 0.3f, 1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-        C("TireFL", V(-0.9f, 0.3f, 1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-        C("TireBR", V(0.9f, 0.3f, -1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-        C("TireBL", V(-0.9f, 0.3f, -1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-
-        if (!parked)
-        {
-            var mover = root.AddComponent<CityEntityBehavior>();
-            mover.type = CityEntityBehavior.EntityType.Vehicle;
-            mover.speed = 12f;
-            mover.travelDistance = 150f;
-        }
-    }
-
-    private void BuildHeroVehicle(Vector3 startPos, GameObject parent)
-    {
-        var root = new GameObject("HeroCar_Parking");
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = startPos;
-        root.transform.localRotation = Quaternion.Euler(0, 0, 0);
-
-        string colorMat = "CarRed";
-        C("Body", V(0, 0.5f, 0), V(1.8f, 0.6f, 4f), colorMat, root);
-        C("Cab", V(0, 1.1f, -0.2f), V(1.6f, 0.5f, 2f), colorMat, root);
-        C("Windshield", V(0, 1.1f, 0.85f), V(1.5f, 0.4f, 0.1f), "Window", root);
-        
-        C("TireFR", V(0.9f, 0.3f, 1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-        C("TireFL", V(-0.9f, 0.3f, 1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-        C("TireBR", V(0.9f, 0.3f, -1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-        C("TireBL", V(-0.9f, 0.3f, -1.2f), V(0.2f, 0.6f, 0.6f), "Tires", root);
-
-        var mover = root.AddComponent<CinematicParkingCar>();
-        mover.speed = 4f;
-        mover.turnSpeed = 60f;
-        mover.waypoints = new Vector3[] {
-            V(-47f, 0, -28f),      // 1. Cruise down main street
-            V(-43f, 0, -25f),      // 2. Begin right turn intersection
-            V(-10f, 0, -25f),      // 3. Clear majestic driveway approach
-            V(-2f, 0, -25f),       // 4. Center of the lot lane
-            V(-2f, 0, -18f),       // 5. Straighten out pointing towards lobby
-            V(-2f, 0, -6f)         // 6. Pulled securely into Spot 2!
-        };
-    }
-
-    private void BuildNPC(Vector3 startPos, float rotY, string shirtMat, GameObject parent)
-    {
-        var root = new GameObject("CityPedestrian");
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = startPos;
-        root.transform.localRotation = Quaternion.Euler(0, rotY, 0);
-
-        C("LegL", V(-0.2f, 0.5f, 0), V(0.3f, 1f, 0.3f), "NPCPants", root);
-        C("LegR", V(0.2f, 0.5f, 0), V(0.3f, 1f, 0.3f), "NPCPants", root);
-        C("Torso", V(0, 1.4f, 0), V(0.8f, 0.8f, 0.4f), shirtMat, root);
-        C("Head", V(0, 2f, 0), V(0.4f, 0.4f, 0.4f), "NPCSkin", root);
-
-        var mover = root.AddComponent<CityEntityBehavior>();
-        mover.type = CityEntityBehavior.EntityType.Pedestrian;
-        mover.speed = 2.5f;
-        mover.travelDistance = 80f;
-    }
-
     // ════════════════════════════════════════════════════════════
     //  INTRO CAMERA PATH — smoother kitchen section
     // ════════════════════════════════════════════════════════════
@@ -982,38 +693,24 @@ public class PizzeriaFullBuilder : EditorWindow
     {
         var pathObj = new GameObject("IntroPath");
 
-        // Sweeping tour from far-left street corner, through parking lot, ending at lobby doors
+        // Smooth gentle arc through kitchen — no more back-and-forth zigzag
         Vector3[] points = new Vector3[]
         {
-            // Phase 1: Cruising alongside Hero Car on Main Street (X=-47)
-            new Vector3(-49f, 8f, -68f),
-            new Vector3(-48f, 6.5f, -50f),
-            new Vector3(-48f, 5f, -38f),
-            new Vector3(-47f, 4f, -32f),
-            
-            // Phase 2: The Right Turn into the Massive Driveway Connection
-            new Vector3(-35f, 3.5f, -28f),
-            new Vector3(-20f, 2.8f, -26f),
-            new Vector3(-5f, 2.6f, -26f),
-            
-            // Phase 3: Trailing entirely across the lot, watching pulling into Spot 2
-            new Vector3(-1f, 2.4f, -24f),
-            new Vector3(1f, 2.2f, -20f),
-            new Vector3(2f, 2.0f, -14f),
-            
-            // Phase 4: Sweeping curve Detaching, gliding toward the entrance
-            new Vector3(3f, 1.8f, -8f),
-            new Vector3(2f, 1.8f, -4f),
+            // Phase 1: Street fly-in
+            new Vector3(0f, 8f, -58f),
+            new Vector3(2f, 6f, -45f),
+            new Vector3(-1f, 4.5f, -32f),
+            new Vector3(1f, 3f, -18f),
+            new Vector3(0f, 2.5f, -8f),
 
-            // Phase 5: Approach Lobby Doors and exactly resume interior sweep
-            new Vector3(1f, 1.8f, 2f),
+            // Phase 2: Enter the lobby
             new Vector3(0f, 2f, -1f),
             new Vector3(0f, 1.8f, 4f),
             new Vector3(3f, 1.7f, 7f),
             new Vector3(6f, 1.6f, 10f),
             new Vector3(5f, 1.7f, 13f),
 
-            // Phase 6: Counter
+            // Phase 3: Counter
             new Vector3(2f, 1.6f, 14.5f),
             new Vector3(-1f, 1.6f, 14.5f),
             new Vector3(-4f, 1.7f, 13f),
@@ -1062,81 +759,6 @@ public class PizzeriaFullBuilder : EditorWindow
         SetCheckpoint(cpList, 1, "SkipToKitchen", 0.50f);
         SetCheckpoint(cpList, 2, "SkipToFinale", 0.88f);
         so.ApplyModifiedPropertiesWithoutUndo();
-        // Neon Sign glow illumination overlapping the parking lot
-        PL("NeonAmbientGlow", V(0, 7f, 0), 2f, 20f, new Color(1f, 0.3f, 0.2f), true, p);
-    }
-
-    private void BuildMicroDetails(GameObject p)
-    {
-        // Trash Bags near dumpsters
-        C("TrashBag_1", V(-8f, 0.3f, -32f), V(0.8f, 0.6f, 0.8f), "BuildingTrim", p).transform.localRotation = Quaternion.Euler(15, 45, 15);
-        C("TrashBag_2", V(-7f, 0.4f, -31.5f), V(0.9f, 0.8f, 0.9f), "BuildingTrim", p).transform.localRotation = Quaternion.Euler(-10, 80, -5);
-        C("TrashBag_3", V(-16f, 0.3f, 4f), V(0.7f, 0.6f, 0.7f), "BuildingTrim", p);
-
-        // Cardboard boxes in alley
-        C("Box_1", V(-18f, 0.5f, 6f), V(1, 1, 1), "Dough", p).transform.localRotation = Quaternion.Euler(0, 15, 0);
-        C("Box_2", V(-17.5f, 0.3f, 6.5f), V(0.8f, 0.6f, 0.8f), "Dough", p).transform.localRotation = Quaternion.Euler(0, -25, 0);
-
-        // Mailbox on street intersection corner
-        var mbox = new GameObject("Mailbox");
-        mbox.transform.parent = p.transform;
-        mbox.transform.localPosition = V(-15f, 0, -20.5f);
-        C("Post", V(0, 0.75f, 0), V(0.2f, 1.5f, 0.2f), "Pole", mbox);
-        C("Box", V(0, 1.6f, 0), V(0.6f, 0.6f, 1f), "Window", mbox);
-
-        // Street Drain Grates
-        C("Drain_1", V(-44.8f, 0.01f, -15f), V(0.8f, 0.05f, 1.5f), "BenchFrame", p);
-        C("Drain_2", V(-44.8f, 0.01f, -40f), V(0.8f, 0.05f, 1.5f), "BenchFrame", p);
-        C("Drain_3", V(-25f, 0.01f, -20.8f), V(1.5f, 0.05f, 0.8f), "BenchFrame", p);
-
-        // Fire Hydrants
-        BuildHydrant(V(-46.5f, 0, -18f), p, "Hydrant_1");
-        BuildHydrant(V(4f, 0, -22f), p, "Hydrant_2");
-
-        // Planter Boxes tracing the new pedestrian walk
-        for (int x = -15; x < 25; x += 8)
-        {
-            if (x > -2 && x < 4) continue; // Pizzeria door gap
-            BuildPlanterBox(V(x, 0, -11.5f), p, $"Planter_{x}");
-        }
-    }
-
-    private void BuildHVAC(Vector3 pos, float rotY, GameObject parent, string name)
-    {
-        var root = new GameObject(name);
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = pos;
-        root.transform.localRotation = Quaternion.Euler(0, rotY, 0);
-
-        C("AC_Base", V(0, 0.5f, 0), V(2, 1, 1.5f), "Dumpster", root);
-        C("AC_FanFan", V(0, 1.05f, 0), V(1.2f, 0.1f, 1.2f), "Pole", root);
-        C("AC_Vent", V(0, 0.5f, 0.76f), V(1f, 0.6f, 0.2f), "BenchFrame", root);
-    }
-
-    private void BuildPlanterBox(Vector3 pos, GameObject parent, string name)
-    {
-        var root = new GameObject(name);
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = pos;
-
-        C("PlanterBase", V(0, 0.4f, 0), V(4f, 0.8f, 1.5f), "BuildingTrim", root);
-        C("PlanterDirt", V(0, 0.75f, 0), V(3.8f, 0.8f, 1.3f), "BldgDoor", root);
-        C("PBush_1", V(-1f, 1f, 0), V(1.2f, 1f, 1.2f), "Plant", root);
-        C("PBush_2", V(1f, 1f, 0), V(1.2f, 1.2f, 1.2f), "Plant", root);
-    }
-
-    private void BuildHydrant(Vector3 pos, GameObject parent, string name)
-    {
-        var root = new GameObject(name);
-        root.transform.parent = parent.transform;
-        root.transform.localPosition = pos;
-
-        C("Base", V(0, 0.1f, 0), V(0.6f, 0.2f, 0.6f), "Awning", root);
-        C("Body", V(0, 0.6f, 0), V(0.4f, 0.8f, 0.4f), "Awning", root);
-        C("Dome", V(0, 1.1f, 0), V(0.45f, 0.3f, 0.45f), "Awning", root);
-        C("NozzleL", V(-0.25f, 0.7f, 0), V(0.2f, 0.15f, 0.15f), "BuildingTrim", root);
-        C("NozzleR", V(0.25f, 0.7f, 0), V(0.2f, 0.15f, 0.15f), "BuildingTrim", root);
-        C("NozzleF", V(0, 0.7f, 0.25f), V(0.15f, 0.15f, 0.3f), "BuildingTrim", root);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -1147,40 +769,24 @@ public class PizzeriaFullBuilder : EditorWindow
     {
         var p = new GameObject("--- LIGHTING ---");
 
-        // Daylight Setting Adjustments
-        RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-        RenderSettings.ambientLight = new Color(0.6f, 0.6f, 0.65f); // Bright daylight base
+        // Lobby
+        PL("Lobby_1", V(0, 3.5f, 6), 1.4f, 14, new Color(1, 0.93f, 0.82f), true, p);
+        PL("Lobby_2", V(0, 3.5f, 14), 1.2f, 12, new Color(1, 0.93f, 0.82f), true, p);
+        PL("Lobby_3", V(-5, 3.2f, 10), 0.6f, 8, new Color(1, 0.93f, 0.82f), true, p);
+        PL("Lobby_4", V(5, 3.2f, 10), 0.6f, 8, new Color(1, 0.93f, 0.82f), true, p);
 
-        // Chimney Exhaust rising over the back of the pizzeria roof
-        BuildParticleSystem(p, "RoofSmoke", V(-5, 6.5f, 15f), V(-90, 0, 0), new Color(0.2f, 0.2f, 0.2f, 0.4f), 3f, 2.5f, 6f, 8, V(1, 1, 1));
-        
-        // Deep Oven Embers violently sparking up
-        BuildParticleSystem(p, "OvenEmbers", V(-16, 0.8f, 16.5f), V(-80, 0, 0), new Color(1f, 0.5f, 0.1f, 0.9f), 0.12f, 3f, 1.5f, 25, V(1.5f, 0.5f, 1));
+        // Kitchen
+        PL("Kitchen_1", V(-16, 3.5f, 12), 1.6f, 14, new Color(1, 1, 0.97f), true, p);
+        PL("Kitchen_2", V(-16, 3.5f, 16), 1, 10, new Color(1, 0.95f, 0.9f), true, p);
+        PL("OvenGlow", V(-16, 0.6f, 16.5f), 0.7f, 4, new Color(1, 0.45f, 0.1f), false, p);
 
-        // Lobby primary lighting
-        PL("Lobby_1", V(0, 3.5f, 6), 1.8f, 15, new Color(1, 0.93f, 0.82f), true, p);
-        PL("Lobby_2", V(0, 3.5f, 14), 1.8f, 15, new Color(1, 0.93f, 0.82f), true, p);
-        
-        // Pendants in Lobby (explicit matching to geometry built in BuildLobby)
-        PL("Pendant_L1", V(-4, 3.1f, 7), 1.2f, 8, new Color(1, 0.93f, 0.82f), true, p);
-        PL("Pendant_R1", V(4, 3.1f, 7), 1.2f, 8, new Color(1, 0.93f, 0.82f), true, p);
-
-        // Kitchen lighting
-        PL("Kitchen_1", V(-16, 3.5f, 12), 2f, 15, new Color(1, 1, 0.97f), true, p);
-        PL("Kitchen_2", V(-16, 3.5f, 16), 1.5f, 12, new Color(1, 0.95f, 0.9f), true, p);
-        PL("OvenGlow", V(-16, 0.6f, 16.5f), 1f, 6, new Color(1, 0.35f, 0.05f), false, p);
-
-        // Street Lights reverted to general ambient point lights matching daylight scheme
-        for (int i = -2; i < 8; i++)
+        // Street
+        for (int i = 0; i < 6; i++)
         {
-            float z = -65f + i * 15f;
-            PL($"SL_L_{i}", V(-49.2f, 4.8f, z), 1.5f, 15f, new Color(1, 0.95f, 0.8f), true, p);
-            PL($"SL_R_{i}", V(-40.8f, 4.8f, z), 1.5f, 15f, new Color(1, 0.95f, 0.8f), true, p);
+            float z = -55f + i * 10f;
+            PL($"SL_L_{i}", V(-4.2f, 4.8f, z), 0.8f, 10, new Color(1, 0.88f, 0.65f), true, p);
+            PL($"SL_R_{i}", V(4.2f, 4.8f, z), 0.8f, 10, new Color(1, 0.88f, 0.65f), true, p);
         }
-
-        // Park Ambient Lights mounted inside the fountain square
-        PL("ParkLightAmbient_1", V(10f, 4.5f, -42.5f), 1.2f, 12f, new Color(1, 0.95f, 0.85f), false, p);
-        PL("ParkLightAmbient_2", V(20f, 4.5f, -42.5f), 1.2f, 12f, new Color(1, 0.95f, 0.85f), false, p);
     }
 
     // ════════════════════════════════════════════════════════════
@@ -1200,7 +806,6 @@ public class PizzeriaFullBuilder : EditorWindow
         obj.name = name;
         if (parent != null) obj.transform.parent = parent.transform;
         obj.transform.localPosition = pos; // Fixed: Use localPosition so groups don't clump at origin!
-        obj.transform.localRotation = Quaternion.identity; // Fixed: Reset local rotation so it rotates WITH the parent
         obj.transform.localScale = scale;
         if (mat != null) obj.GetComponent<Renderer>().sharedMaterial = mat;
         return obj;
@@ -1226,55 +831,12 @@ public class PizzeriaFullBuilder : EditorWindow
             bulb.transform.parent = obj.transform;
             Renderer r = bulb.GetComponent<Renderer>();
             r.sharedMaterial = M("LightBulb");
+            // Set emission color to match the light if not already done
+            r.sharedMaterial.EnableKeyword("_EMISSION");
+            r.sharedMaterial.SetColor("_EmissionColor", color * 2.0f); 
+            // Also turn off shadow casting for the bulb
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
-    }
-
-    private void SL(string name, Vector3 pos, float range, GameObject parent)
-    {
-        var obj = new GameObject(name);
-        var l = obj.AddComponent<Light>();
-        l.type = LightType.Spot;
-        l.spotAngle = 65f;
-        l.intensity = 4f;
-        l.range = range;
-        l.color = new Color(1, 0.85f, 0.55f);
-        if (parent != null) obj.transform.parent = parent.transform;
-        obj.transform.localPosition = pos;
-        obj.transform.localRotation = Quaternion.Euler(90, 0, 0); // Point straight down
-        
-        var bulb = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        bulb.transform.parent = obj.transform;
-        bulb.transform.localPosition = Vector3.zero;
-        bulb.transform.localScale = Vector3.one * 0.2f;
-        Renderer r = bulb.GetComponent<Renderer>();
-        r.sharedMaterial = M("LightBulb");
-        r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-    }
-
-    private void BuildParticleSystem(GameObject parent, string name, Vector3 pos, Vector3 rot, Color color, float size, float speed, float lifetime, int rate, Vector3 shapeScale)
-    {
-        var psObj = new GameObject(name);
-        psObj.transform.parent = parent.transform;
-        psObj.transform.localPosition = pos;
-        psObj.transform.localRotation = Quaternion.Euler(rot);
-
-        var ps = psObj.AddComponent<ParticleSystem>();
-        var main = ps.main;
-        main.startColor = color;
-        main.startSize = size;
-        main.startSpeed = speed;
-        main.startLifetime = lifetime;
-
-        var em = ps.emission;
-        em.rateOverTime = rate;
-
-        var shape = ps.shape;
-        shape.shapeType = ParticleSystemShapeType.Box;
-        shape.scale = shapeScale;
-        
-        var r = ps.GetComponent<ParticleSystemRenderer>();
-        r.sharedMaterial = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Particle.mat");
     }
 
     private static void SetCheckpoint(SerializedProperty list, int index, string trigName, float pathPos)
