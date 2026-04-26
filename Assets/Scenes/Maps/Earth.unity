@@ -862,6 +862,7 @@ MonoBehaviour:
   m_Script: {fileID: 1702712328}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
+  SlotName: 
 --- !u!114 &820571397
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1402,6 +1403,7 @@ MonoBehaviour:
   m_Script: {fileID: 1702712328}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventorySlotUI
+  SlotName: 
 --- !u!114 &1251828317
 MonoBehaviour:
   m_ObjectHideFlags: 0
