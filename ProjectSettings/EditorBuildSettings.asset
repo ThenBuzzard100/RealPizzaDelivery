@@ -6,9 +6,21 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/intro_and_MainMenu/PizzeriaWorld.unity
+    path: Assets/Scenes/Test.unity
+    guid: dcd51deeabaea1b42b09be2216f88f06
+  - enabled: 1
+    path: Assets/Scenes/intro_and_MainMenu/Intro.unity
     guid: 3e8508a272950f245aac4c4718329e64
   - enabled: 1
-    path: Assets/Scenes/Maps/CityWorld.unity
+    path: Assets/Scenes/intro_and_MainMenu/MainMenu.unity
+    guid: 5375afb1f185c134abef55f561d1fc3d
+  - enabled: 1
+    path: Assets/Scenes/Maps/Earth.unity
     guid: 59b721d203e14ea4a87e7d9cdf5a62e6
+  - enabled: 1
+    path: Assets/Scenes/Maps/TransitPod.unity
+    guid: 4c4b959a3a53fde4989f0b232442e85f
+  - enabled: 1
+    path: Assets/Scenes/Maps/Moon.unity
+    guid: 257d92453b6168844ae9a8e0dc4da00e
   m_configObjects: {}
