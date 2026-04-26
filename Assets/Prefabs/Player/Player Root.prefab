@@ -73,7 +73,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fc49ad3a8c06394d821f093ce78cf87, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  walkSpeed: 5
+  maxWalkSpeed: 5
   sprintMultiplier: 1.8
   bobFrequency: 10
   meshBobAmplitude: 0.15

@@ -8,7 +8,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [SerializeField] private float walkSpeed = 5f;
+    [SerializeField] private float maxWalkSpeed = 5f;
     [SerializeField] private float sprintMultiplier = 1.8f;
     
     [Header("Bounciness & Bobbing")]
@@ -42,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
     // --- Private Internal State ---
     private CharacterController controller;
     private Vector3 velocity; // Vertical physics velocity
+    private float currentSpeed;
     private float xRotation; // Pitch (Up/Down)
     private float yRotation; // Yaw (Left/Right)
     private float bobTimer; // Tracks the progress of the sine wave
@@ -113,13 +114,19 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // Input processing
+        // todo: make sure input actions are being used properly
         float inputX = Input.GetAxisRaw("Horizontal");
         float inputZ = Input.GetAxisRaw("Vertical");
         Vector3 moveDirection = transform.right * inputX + transform.forward * inputZ;
 
         if (moveDirection.sqrMagnitude > 1f) moveDirection.Normalize();
 
-        float currentSpeed = walkSpeed * (Input.GetKey(KeyCode.LeftShift) ? sprintMultiplier : 1f);
+        // todo: make acceleration and deacceleration work
+        currentSpeed += .1f;
+        if (currentSpeed > maxWalkSpeed)
+        {
+            currentSpeed = maxWalkSpeed;
+        }
 
         // 1. Jump logic (ONLY handles the upward boost)
         if (isGrounded && Input.GetButtonDown("Jump"))
@@ -129,10 +136,20 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // 2. Apply gravity (Runs every frame)
-        velocity.y -= gravity * Time.deltaTime;
+        // Note: if you want to instantly change velocity, then you have to change v0 & v1 at the same time
+        float v0_vertical = velocity.y; // Initial vertical velocity
+        velocity.y -= gravity * Time.deltaTime; // Apply gravity
+        float v1_vertical = velocity.y; // Final vertical velocity
 
-        // 3. Calculate move (Runs every frame)
-        Vector3 finalMove = (moveDirection * currentSpeed + velocity) * Time.deltaTime;
+        // 3. Calculate move (Runs every frame and applies sprintMultiplier if sprint button is pressed)
+        // D = (V0 + V1) * 0.5 (average velocity formula)
+        float horizontalSpeed = currentSpeed * (Input.GetKey(KeyCode.LeftShift) ? sprintMultiplier : 1f);
+        float v0_horizontal = horizontalSpeed; // Initial horizontal velocity
+        float v1_horizontal = horizontalSpeed; // Final horizontal velocity (unchanged mid-frame)
+
+        Vector3 horizontalMove = moveDirection * (v0_horizontal + v1_horizontal) * 0.5f * Time.deltaTime;
+        float verticalMove = (v0_vertical + v1_vertical) * 0.5f * Time.deltaTime;
+        Vector3 finalMove = new Vector3(horizontalMove.x, verticalMove, horizontalMove.z);
 
         // 4. Actually Move (Runs every frame)
         controller.Move(finalMove);
@@ -152,7 +169,7 @@ public class PlayerMovement : MonoBehaviour
         {
             // Calculate how fast we are moving relative to normal walk speed
             // This creates a multiplier (e.g., 1.0 for walking, 1.8 for sprinting)
-            float speedIntensity = horizontalSpeed / walkSpeed;
+            float speedIntensity = horizontalSpeed / maxWalkSpeed;
 
             // Multiply the frequency (speed of jiggle) and amplitudes (height of jiggle)
             bobTimer += Time.deltaTime * (bobFrequency * speedIntensity);
