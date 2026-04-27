@@ -165,6 +165,7 @@ public class PlayerMovement : NetworkBehaviour
         // Without this guard, your keyboard would move ALL of those objects, not
         // just yours. The guard makes sure each client only drives their own character.
         if (!isLocalPlayer) return;
+        if (Time.timeScale == 0f) return;
 
         if (Input.GetMouseButtonDown(0)) // If I left-click...
         {
