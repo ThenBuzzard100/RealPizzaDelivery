@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 
 /// <summary>
 /// GalaxyManager: Singleton. Source of truth for the entire game's seed system.
-/// Place this on a persistent GameObject in your boostrap/main-menu scene.
+/// Place this on a persistent GameObject in your bootstrap/main-menu scene.
 /// Call GalaxyManager.Instance.TravelToPlanet() to begin a transition.
 /// </summary>
 public class GalaxyManager : MonoBehaviour
@@ -13,7 +13,6 @@ public class GalaxyManager : MonoBehaviour
     public static GalaxyManager Instance { get; private set; }
 
     // ── Master Seed ───────────────────────────────────────────────────────────
-    
     /// <summary>
     /// The 64-bit master seed for the entire session.
     /// Set this from the main menu (new game = random, load game = saved value).
@@ -22,27 +21,23 @@ public class GalaxyManager : MonoBehaviour
     public long masterSeed = 0L;
 
     /// <summary>
-    /// The planet the player is currently on or traveling to.
+    /// The planet the player is currently on or travelling to.
     /// </summary>
     [Header("Current State")]
     public PlanetType currentPlanet = PlanetType.Earth;
 
     // ── Scene Names ───────────────────────────────────────────────────────────
     [Header("Scene Names (must match Build Settings)")]
-    public string transitPodSceneName = "TransitPod";
-    public string earthSceneName = "Earth";
-    public string moonSceneName = "Moon";
+    public string transitPodSceneName  = "TransitPod";
+    public string earthSceneName       = "Earth";
+    public string moonSceneName        = "Moon";
 
     // ── Internal ──────────────────────────────────────────────────────────────
-    
     /// <summary>The sub-seed for the destination planet, passed to TransitEmergencyManager.</summary>
     public long CurrentPlanetSubSeed { get; private set; }
 
-    /// <summary>Landing offset in world units. Set by TansitEmergencyManager based on repair success.</summary>
+    /// <summary>Landing offset in world units. Set by TransitEmergencyManager based on repair success.</summary>
     public Vector3 LandingOffset { get; set; } = Vector3.zero;
-
-    /// <summary>Exposed so TransitEmergencyManager can poll load progress.</summary>
-    public AsyncOperation BackgroundLoadProgress { get; private set; }
 
     // ─────────────────────────────────────────────────────────────────────────
     private void Awake()
@@ -86,26 +81,28 @@ public class GalaxyManager : MonoBehaviour
         hash ^= hash >> 33;
         hash *= unchecked((long)0xff51afd7ed558ccdL);
         hash ^= hash >> 33;
-        hash *= unchecked((long)0xff51afd7ed558ccdL);
+        hash *= unchecked((long)0xc4ceb9fe1a85ec53L);
         hash ^= hash >> 33;
         return hash;
     }
 
     /// <summary>
-    /// Begins the full travel sequence:
-    ///     1. Derives the sub-seed for the destination planet.
-    ///     2. Loads the TransitPod scene (async, additive while pod plays).
-    ///     3. TransitPod scene handles the minigame and calls ArriveAtPlanet() when done.
+    /// Begins the full travel sequence.
+    /// Earth: loads directly — no transit pod (initial game load from main menu).
+    /// Moon: loads TransitPod scene first, then Moon in background.
     /// </summary>
     public void TravelToPlanet(PlanetType destination)
     {
-        currentPlanet = destination;
+        currentPlanet        = destination;
         CurrentPlanetSubSeed = DerivePlanetSubSeed(destination);
-        LandingOffset = Vector3.zero;
+        LandingOffset        = Vector3.zero;
 
-        Debug.Log($"[GalaxyManager] Traveling to {destination}. Sub-seed: {CurrentPlanetSubSeed}");
+        Debug.Log($"[GalaxyManager] Travelling to {destination}. Sub-seed: {CurrentPlanetSubSeed}");
 
-        StartCoroutine(LoadTransitPodThenPlanet(destination));
+        if (destination == PlanetType.Moon)
+            StartCoroutine(LoadTransitPodThenPlanet(destination));
+        else
+            StartCoroutine(LoadPlanetDirectly(destination));
     }
 
     /// <summary>
@@ -123,6 +120,14 @@ public class GalaxyManager : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
     #region Private Coroutines
 
+    private IEnumerator LoadPlanetDirectly(PlanetType destination)
+    {
+        string sceneName = destination == PlanetType.Moon ? moonSceneName : earthSceneName;
+        AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
+        while (!op.isDone) yield return null;
+        Debug.Log($"[GalaxyManager] Arrived directly at {destination}.");
+    }
+
     private IEnumerator LoadTransitPodThenPlanet(PlanetType destination)
     {
         // Load transit pod scene
@@ -133,7 +138,7 @@ public class GalaxyManager : MonoBehaviour
         // Planet scene loads in the background while the pod plays
         string planetScene = destination == PlanetType.Moon ? moonSceneName : earthSceneName;
         AsyncOperation planetLoad = SceneManager.LoadSceneAsync(planetScene, LoadSceneMode.Additive);
-        planetLoad.allowSceneActivation = false; // Hold until pod is done
+        planetLoad.allowSceneActivation = false; // hold until pod is done
 
         // Store for TransitEmergencyManager to query progress
         BackgroundLoadProgress = planetLoad;
@@ -172,4 +177,7 @@ public class GalaxyManager : MonoBehaviour
     }
 
     #endregion
+
+    /// <summary>Exposed so TransitEmergencyManager can poll load progress.</summary>
+    public AsyncOperation BackgroundLoadProgress { get; private set; }
 }

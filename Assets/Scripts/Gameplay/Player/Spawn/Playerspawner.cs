@@ -26,15 +26,29 @@ public class PlayerSpawner : MonoBehaviour
 
     private void Start()
     {
-        // If Mirror is running as host or client, it handles spawning — do nothing
+        // If Mirror is already running as host or client, it handles spawning
         if (NetworkServer.active || NetworkClient.isConnected)
         {
             Debug.Log("[PlayerSpawner] Mirror active — skipping single player spawn.");
             return;
         }
 
-        // Single player — spawn manually
-        SpawnSinglePlayer();
+        // Start Mirror as host even in single player so all NetworkBehaviours
+        // initialise correctly — without this, scripts that require a network
+        // connection won't run at all
+        NetworkManager nm = NetworkManager.singleton;
+        if (nm != null)
+        {
+            nm.StartHost();
+            Debug.Log("[PlayerSpawner] Started Mirror as single player host.");
+            // Mirror will spawn the player via NetworkManager.playerPrefab automatically
+            // so we don't need to call SpawnSinglePlayer() here
+        }
+        else
+        {
+            // No NetworkManager — pure single player, spawn directly
+            SpawnSinglePlayer();
+        }
     }
 
     private void SpawnSinglePlayer()

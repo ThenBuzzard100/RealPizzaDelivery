@@ -16,10 +16,15 @@ public class GradientStrip : MonoBehaviour
         tex.wrapMode = TextureWrapMode.Clamp;
         tex.filterMode = FilterMode.Bilinear;
 
+        Color targetColor = new Color(13f/255f, 13f/255f, 13f/255f);
+
         for (int x = 0; x < 64; x++)
         {
+            // This creates the transparency fade (1 is solid, 0 is clear)
             float alpha = 1f - (x / 63f);
-            tex.SetPixel(x, 0, new Color(0f, 0f, 0f, alpha));
+            
+            // Apply the RGB (13,13,13) with the calculated alpha
+            tex.SetPixel(x, 0, new Color(targetColor.r, targetColor.g, targetColor.b, alpha));
         }
         tex.Apply();
 

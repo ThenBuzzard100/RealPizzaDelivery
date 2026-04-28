@@ -6,14 +6,14 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Testing/Networking test.unity
-    guid: e57d73fb3bf5ccd4c8c09e349169e0da
-  - enabled: 1
     path: Assets/Scenes/intro_and_MainMenu/Intro.unity
     guid: 3e8508a272950f245aac4c4718329e64
   - enabled: 1
     path: Assets/Scenes/intro_and_MainMenu/MainMenu.unity
     guid: 5375afb1f185c134abef55f561d1fc3d
+  - enabled: 1
+    path: Assets/Scenes/Testing/Networking_Test.unity
+    guid: e57d73fb3bf5ccd4c8c09e349169e0da
   - enabled: 1
     path: Assets/Scenes/Maps/Earth.unity
     guid: 59b721d203e14ea4a87e7d9cdf5a62e6

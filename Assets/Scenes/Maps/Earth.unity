@@ -976,71 +976,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 934371478}
   m_CullTransparentMesh: 1
---- !u!1001 &1086280486
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 939534925875584499, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_Name
-      value: Player Root
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1060
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5160985089692186590, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6006668163983903981, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: sceneId
-      value: 3628197580
-      objectReference: {fileID: 0}
-    - target: {fileID: 8260275082982836281, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
-      propertyPath: sceneId
-      value: 89379093
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: a7216c128e940174a8a9e4bc367f314b, type: 3}
 --- !u!1 &1090225069
 GameObject:
   m_ObjectHideFlags: 0
@@ -1821,7 +1756,7 @@ MonoBehaviour:
   craterDepth: 0.35
   craterCount: 40
   allStructures: []
-  pizzeriaPrefab: {fileID: 1273349891920541706, guid: 1ba718fa8b1eba24f8a46c1e1305f602, type: 3}
+  pizzeriaPrefab: {fileID: 1273349891920541706, guid: 3de1ddda5f513564c90838f835c0977d, type: 3}
   structureCandidateCount: 200
   roadTerrainLayerIndex: 1
   roadWidth: 4
@@ -1906,5 +1841,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 97093881}
   - {fileID: 2089557812}
-  - {fileID: 1086280486}
   - {fileID: 335090202}

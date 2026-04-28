@@ -104,11 +104,29 @@ public class PlayPanelController : MonoBehaviour
             return;
         }
 
-        // Persist the chosen name so the game scene can read it
         PlayerPrefs.SetString("NewWorldName", name);
         PlayerPrefs.Save();
 
-        UnityEngine.SceneManagement.SceneManager.LoadScene(newGameSceneName);
+        if (GalaxyManager.Instance != null)
+        {
+            // Generate seed from name + time and pass to GalaxyManager
+            long nameHash = 0L;
+            foreach (char c in name) nameHash = nameHash * 31L + c;
+            long seed = nameHash ^ System.DateTime.Now.Ticks;
+
+            // Save seed for loading later
+            PlayerPrefs.SetInt($"Seed_High_{name}", (int)(seed >> 32));
+            PlayerPrefs.SetInt($"Seed_Low_{name}",  (int)(seed & 0xFFFFFFFFL));
+            SaveDataHelper.RegisterSave(name);
+            PlayerPrefs.Save();
+
+            GalaxyManager.Instance.InitialiseSeed(seed);
+            GalaxyManager.Instance.TravelToPlanet(PlanetType.Earth);
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(newGameSceneName);
+        }
     }
 
     #endregion
@@ -142,7 +160,33 @@ public class PlayPanelController : MonoBehaviour
     {
         PlayerPrefs.SetString("LoadWorldName", saveName);
         PlayerPrefs.Save();
-        UnityEngine.SceneManagement.SceneManager.LoadScene(newGameSceneName);
+
+        if (GalaxyManager.Instance != null)
+        {
+            // Load saved seed from PlayerPrefs
+            long seed = 0L;
+            if (PlayerPrefs.HasKey($"Seed_High_{saveName}"))
+            {
+                int high = PlayerPrefs.GetInt($"Seed_High_{saveName}");
+                int low  = PlayerPrefs.GetInt($"Seed_Low_{saveName}");
+                seed = ((long)high << 32) | ((long)low & 0xFFFFFFFFL);
+            }
+
+            if (seed == 0L)
+            {
+                // No saved seed found — generate one
+                long nameHash = 0L;
+                foreach (char c in saveName) nameHash = nameHash * 31L + c;
+                seed = nameHash ^ System.DateTime.Now.Ticks;
+            }
+
+            GalaxyManager.Instance.InitialiseSeed(seed);
+            GalaxyManager.Instance.TravelToPlanet(PlanetType.Earth);
+        }
+        else
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(newGameSceneName);
+        }
     }
 
     #endregion

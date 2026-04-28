@@ -176,6 +176,13 @@ public class PlayerMovement : NetworkBehaviour
         HandleMouseLook();
         HandleMovement();
     }
+
+    // HandlesMouseLook and Cursor locking
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
     
     private void HandleMouseLook()
     {
@@ -256,10 +263,19 @@ public class PlayerMovement : NetworkBehaviour
         //   and Mirror never sees it, so nobody else ever receives the update.
         //   The [Command] is the correct bridge: client calls it → server runs it →
         //   server updates the SyncVar → Mirror pushes the new value to all clients.
-        CmdUpdateMovementState(
-            new Vector2(controller.velocity.x, controller.velocity.z).magnitude,
-            controller.isGrounded
-        );
+        if (isLocalPlayer && isClient && NetworkClient.isConnected)
+        {
+            CmdUpdateMovementState(
+                new Vector2(controller.velocity.x, controller.velocity.z).magnitude,
+                controller.isGrounded
+            );
+        }
+        else if (isServer)
+        {
+            // Host — write SyncVars directly since we are already the server
+            syncedHorizontalSpeed = new Vector2(controller.velocity.x, controller.velocity.z).magnitude;
+            syncedIsGrounded      = controller.isGrounded;
+        }
     }
 
     // [MIRROR] [Command] — this method does NOT run on the machine that calls it.
