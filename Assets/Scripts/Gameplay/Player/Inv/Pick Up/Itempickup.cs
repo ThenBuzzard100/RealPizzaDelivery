@@ -3,14 +3,14 @@ using UnityEngine;
 // ─────────────────────────────────────────────────────────────────────────────
 // ItemPickup.cs
 // Attach this to any item GameObject in the scene.
-// Set the Item field in the Inspector to the InventoryItem you want it to hold.
-// Player walks near it, presses E, item goes into the bag.
+// Compatible with Mirror — retries finding the local player every frame
+// until it spawns, instead of failing silently in Start().
 // ─────────────────────────────────────────────────────────────────────────────
 public class ItemPickup : MonoBehaviour
 {
     [Header("Item")]
     [Tooltip("The item this pickup represents.")]
-    public InventoryItemData ItemData;   // ScriptableObject — see InventoryItemData.cs
+    public InventoryItemData ItemData;
 
     [Header("Pickup Settings")]
     [Tooltip("How close the player must be to see the prompt.")]
@@ -31,21 +31,6 @@ public class ItemPickup : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
     private void Start()
     {
-        // Find the player — tag your player GameObject as "Player" in Unity
-        var player = GameObject.FindWithTag("Player");
-        if (player == null)
-        {
-            Debug.LogWarning($"[ItemPickup] No GameObject tagged 'Player' found. " +
-                              "Tag your player in the Inspector.");
-            return;
-        }
-
-        _playerTransform = player.transform;
-        _inventory       = player.GetComponent<InventoryBehaviour>();
-
-        if (_inventory == null)
-            Debug.LogWarning($"[ItemPickup] Player has no InventoryBehaviour component.");
-
         if (PromptObject != null)
             PromptObject.SetActive(false);
     }
@@ -53,18 +38,54 @@ public class ItemPickup : MonoBehaviour
     // ─────────────────────────────────────────────────────────────────────────
     private void Update()
     {
-        if (_playerTransform == null || _inventory == null) return;
+        // Keep retrying until the local player spawns (handles Mirror network delay)
+        if (_playerTransform == null || _inventory == null)
+        {
+            TryFindPlayer();
+            return;
+        }
 
         float dist = Vector3.Distance(transform.position, _playerTransform.position);
         _playerInRange = dist <= PickupRadius;
 
-        // Show / hide prompt
         if (PromptObject != null)
             PromptObject.SetActive(_playerInRange);
 
-        // Pickup input
         if (_playerInRange && Input.GetKeyDown(PickupKey))
             TryPickup();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    private void TryFindPlayer()
+    {
+        var candidates = GameObject.FindGameObjectsWithTag("Player");
+        if (candidates.Length == 0) return;
+
+        GameObject localPlayer = null;
+
+#if MIRROR
+        // With Mirror, only interact with the local player
+        foreach (var candidate in candidates)
+        {
+            var ni = candidate.GetComponent<Mirror.NetworkIdentity>();
+            if (ni != null && ni.isLocalPlayer)
+            {
+                localPlayer = candidate;
+                break;
+            }
+        }
+#else
+        // No Mirror — just grab the first tagged player
+        localPlayer = candidates[0];
+#endif
+
+        if (localPlayer == null) return;
+
+        _playerTransform = localPlayer.transform;
+        _inventory       = localPlayer.GetComponent<InventoryBehaviour>();
+
+        if (_inventory == null)
+            Debug.LogWarning($"[ItemPickup] Local player has no InventoryBehaviour.");
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -76,18 +97,14 @@ public class ItemPickup : MonoBehaviour
             return;
         }
 
-        // Build a runtime InventoryItem from the ScriptableObject definition
-        var item = ItemData.CreateItem();
-
-        // Auto-equip into the first valid empty slot — falls back to bag if all slots full
+        var item   = ItemData.CreateItem();
         var result = _inventory.Inventory.AutoEquip(item);
         Debug.Log($"[ItemPickup] Picked up: {item.DisplayName} — equip result: {result}");
 
-        // Destroy the world object after pickup
         Destroy(gameObject);
     }
 
-    // ── Draw pickup radius in the editor so you can see it ───────────────────
+    // ─────────────────────────────────────────────────────────────────────────
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = new Color(1f, 0.92f, 0.3f, 0.4f);

@@ -167,9 +167,9 @@ public class InventoryEditorWindow : EditorWindow
 
         Canvas     canvas   = _createCanvas ? CreateCanvas() : _targetCanvas;
         float      offSize  = _slotSize * 1.5f;
-        GameObject panel    = CreateHotbarPanel(canvas.transform, offSize);
 
-        // All slots same size — off-hand leftmost, HorizontalLayoutGroup handles spacing
+        // All 3 slots together in one panel — bottom left, off-hand first
+        GameObject panel = CreateHotbarPanel(canvas.transform, offSize);
         CreateSlot(panel.transform, "Off Hand",    _offHandColor,  "OFF", offSize);
         CreateSlot(panel.transform, "Main Hand 1", _mainHandColor, "MH1", offSize);
         CreateSlot(panel.transform, "Main Hand 2", _mainHandColor, "MH2", offSize);
@@ -205,6 +205,36 @@ public class InventoryEditorWindow : EditorWindow
 
         go.AddComponent<GraphicRaycaster>();
         return canvas;
+    }
+
+    private GameObject CreateSidePanel(Transform parent, string name, float slotSize, bool leftSide)
+    {
+        var go = new GameObject(name);
+        Undo.RegisterCreatedObjectUndo(go, $"Create {name}");
+        go.transform.SetParent(parent, false);
+
+        float panelSize = slotSize + (_padding * 2f);
+        var rect              = go.AddComponent<RectTransform>();
+        rect.anchorMin        = new Vector2(leftSide ? 0f : 1f, 0.5f);
+        rect.anchorMax        = new Vector2(leftSide ? 0f : 1f, 0.5f);
+        rect.pivot            = new Vector2(leftSide ? 0f : 1f, 0.5f);
+        rect.sizeDelta        = new Vector2(panelSize, panelSize);
+        rect.anchoredPosition = new Vector2(leftSide ? 24f : -24f, 0f);
+
+        var img   = go.AddComponent<Image>();
+        img.color = _bgColor;
+
+        var layout                  = go.AddComponent<HorizontalLayoutGroup>();
+        layout.childAlignment       = TextAnchor.MiddleCenter;
+        layout.padding              = new RectOffset(
+            (int)_padding, (int)_padding,
+            (int)_padding, (int)_padding);
+        layout.childForceExpandWidth  = false;
+        layout.childForceExpandHeight = false;
+        layout.childControlWidth      = false;
+        layout.childControlHeight     = false;
+
+        return go;
     }
 
     private GameObject CreateHotbarPanel(Transform parent, float offSize)

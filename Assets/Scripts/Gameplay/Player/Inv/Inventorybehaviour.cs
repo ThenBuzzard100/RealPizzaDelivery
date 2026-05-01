@@ -122,23 +122,25 @@ public class InventorySlotUI : MonoBehaviour
         }
     }
 
-    private static InventoryItemData FindItemData(string itemId)
+    private InventoryItemData FindItemData(string itemId)
     {
+        // Works in editor and in builds — move your InventoryItemData assets 
+        // into a Resources/Items/ folder for this to work in builds
+        var all = Resources.LoadAll<InventoryItemData>("");
+        foreach (var data in all)
+            if (data != null && data.Id == itemId) return data;
+
 #if UNITY_EDITOR
+        // Editor fallback — searches entire project regardless of folder
         var guids = UnityEditor.AssetDatabase.FindAssets("t:InventoryItemData");
         foreach (var guid in guids)
         {
             var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
             var data = UnityEditor.AssetDatabase.LoadAssetAtPath<InventoryItemData>(path);
-            if (data != null && data.Id == itemId)
-                return data;
+            if (data != null && data.Id == itemId) return data;
         }
-#else
-        // At runtime in a build, put your InventoryItemData assets in Resources/Items/
-        var all = Resources.LoadAll<InventoryItemData>("Items");
-        foreach (var data in all)
-            if (data.Id == itemId) return data;
 #endif
+        Debug.LogWarning($"[SlotUI] Could not find InventoryItemData with Id '{itemId}'.");
         return null;
     }
 }

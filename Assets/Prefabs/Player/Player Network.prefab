@@ -11,10 +11,14 @@ GameObject:
   - component: {fileID: 5160985089692186590}
   - component: {fileID: 1174078580328079680}
   - component: {fileID: 3853228893345461365}
-  - component: {fileID: 3130970257907451731}
+  - component: {fileID: 599355521675992252}
   - component: {fileID: 2116758801783677410}
-  - component: {fileID: -1337324001403625491}
+  - component: {fileID: 3130970257907451731}
+  - component: {fileID: 6766762102913712128}
+  - component: {fileID: 2851966136995133166}
+  - component: {fileID: 7411672009871452953}
   - component: {fileID: 2971851398215304626}
+  - component: {fileID: -1337324001403625491}
   m_Layer: 0
   m_Name: Player Network
   m_TagString: Player
@@ -94,7 +98,7 @@ MonoBehaviour:
   mouseSensitivity: 2
   maxLookAngle: 80
   cameraTransform: {fileID: 4692659168689451593}
---- !u!114 &3130970257907451731
+--- !u!114 &599355521675992252
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -103,9 +107,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 939534925875584499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c99a3e6feb76ea14a97d92737f0e41c4, type: 3}
+  m_Script: {fileID: 11500000, guid: 3def155dd8de0d54fb31663f028957ea, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InventoryBehaviour
+  m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
+  MaxHealth: 100
 --- !u!114 &2116758801783677410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,6 +126,76 @@ MonoBehaviour:
   spawnCrashEffect: 1
   crashEffectPrefab: {fileID: 0}
   crashThreshold: 100
+--- !u!114 &3130970257907451731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939534925875584499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c99a3e6feb76ea14a97d92737f0e41c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryBehaviour
+--- !u!114 &6766762102913712128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939534925875584499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3520e477b648654c957c3e524c01415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Itemuser
+--- !u!114 &2851966136995133166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939534925875584499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1acf6e273b4762742998c19266e35688, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemVisualHandler
+  LeftHandBone: {fileID: 0}
+  LeftHandOffset: {x: -0.6, y: 0.8, z: 0.3}
+  HeldScale: {x: 1, y: 1, z: 1}
+  HeldRotation: {x: 0, y: 0, z: 0}
+--- !u!114 &7411672009871452953
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939534925875584499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1a0e4cfebc2a1f4394631eef39a75d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HotbarSelector
+  HighlightColor: {r: 1, g: 1, b: 1, a: 0.35}
+--- !u!114 &2971851398215304626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939534925875584499}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 1367356440
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
 --- !u!114 &-1337324001403625491
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,23 +230,6 @@ MonoBehaviour:
   rotationSensitivity: 0.01
   positionPrecision: 0.01
   scalePrecision: 0.01
---- !u!114 &2971851398215304626
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 939534925875584499}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
-  sceneId: 0
-  _assetId: 1367356440
-  serverOnly: 0
-  visibility: 0
-  hasSpawned: 0
 --- !u!1 &1638846817818560449
 GameObject:
   m_ObjectHideFlags: 0
