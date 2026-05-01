@@ -1,29 +1,26 @@
 using UnityEngine;
+using Mirror;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InventoryBehaviour.cs
-// Attach to the Player GameObject. Wraps the pure-C# Inventory class so it
-// lives in Unity's component system.
+// Attach to the Player GameObject. Uses Mirror's OnStartLocalPlayer so the
+// Inventory is only ever initialized on the local player — never on remotes.
 // ─────────────────────────────────────────────────────────────────────────────
-public class InventoryBehaviour : MonoBehaviour
+public class InventoryBehaviour : NetworkBehaviour
 {
     public Inventory Inventory { get; private set; }
 
-    private void Awake()
+    // Called by Mirror only on the local player — guaranteed after isLocalPlayer is set
+    public override void OnStartLocalPlayer()
     {
         Inventory = new Inventory();
-
-        // Subscribe to bag changes if you want to drive UI from here
         Inventory.OnBagChanged += OnBagChanged;
     }
 
     private void OnBagChanged()
     {
-        // Hook your UI refresh here, e.g.:
-        // InventoryUIManager.Instance.RefreshBag(Inventory.Bag);
+        // Hook your UI refresh here
     }
-
-    // ── Public helpers so other components can talk to the inventory ──────────
 
     public EquipResult Equip(InventoryItem item, InventorySlot slot)
         => Inventory.Equip(item, slot);
@@ -37,8 +34,6 @@ public class InventoryBehaviour : MonoBehaviour
 
 // ─────────────────────────────────────────────────────────────────────────────
 // InventorySlotUI.cs
-// Sits on each slot GameObject. Hook this up to your drag-and-drop / click
-// system. The editor window adds this automatically to every slot it creates.
 // ─────────────────────────────────────────────────────────────────────────────
 public class InventorySlotUI : MonoBehaviour
 {
@@ -48,22 +43,35 @@ public class InventorySlotUI : MonoBehaviour
 
     private UnityEngine.UI.Image _iconImage;
     [HideInInspector] public InventorySlot LinkedSlot;
+    private bool _initialized = false;
 
     private void Start()
     {
-        // Find the Icon Image the builder created as a child
         var iconTransform = transform.Find("Icon");
         if (iconTransform != null)
             _iconImage = iconTransform.GetComponent<UnityEngine.UI.Image>();
         else
-            Debug.LogWarning($"[SlotUI] {SlotName} has no child named 'Icon'. Rebuild the hotbar via Tools → Inventory → Setup Inventory System.");
+            Debug.LogWarning($"[SlotUI] {SlotName} has no child named 'Icon'. Rebuild the hotbar.");
+    }
 
-        var inv = FindFirstObjectByType<InventoryBehaviour>();
-        if (inv == null)
+    private void Update()
+    {
+        if (_initialized) return;
+        TryInitialize();
+    }
+
+    private void TryInitialize()
+    {
+        // Find the local player's InventoryBehaviour — only one will have Inventory initialized
+        InventoryBehaviour inv = null;
+        foreach (var candidate in FindObjectsByType<InventoryBehaviour>(FindObjectsSortMode.None))
         {
-            Debug.LogWarning($"[SlotUI] No InventoryBehaviour found in scene.");
-            return;
+            if (candidate.Inventory == null) continue;   // remote players have null Inventory
+            inv = candidate;
+            break;
         }
+
+        if (inv == null) return;
 
         LinkedSlot = SlotName switch
         {
@@ -80,9 +88,8 @@ public class InventorySlotUI : MonoBehaviour
         }
 
         LinkedSlot.OnChanged += OnSlotChanged;
-
-        // Refresh immediately in case an item was already in this slot
         RefreshIcon(LinkedSlot.Item);
+        _initialized = true;
     }
 
     private void OnDestroy()
@@ -116,22 +123,18 @@ public class InventorySlotUI : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[SlotUI] No icon found for '{item.Id}'. " +
-                              "Check the InventoryItemData Id matches exactly and has an Icon assigned.");
+            Debug.LogWarning($"[SlotUI] No icon found for '{item.Id}'.");
             _iconImage.enabled = false;
         }
     }
 
     private InventoryItemData FindItemData(string itemId)
     {
-        // Works in editor and in builds — move your InventoryItemData assets 
-        // into a Resources/Items/ folder for this to work in builds
         var all = Resources.LoadAll<InventoryItemData>("");
         foreach (var data in all)
             if (data != null && data.Id == itemId) return data;
 
 #if UNITY_EDITOR
-        // Editor fallback — searches entire project regardless of folder
         var guids = UnityEditor.AssetDatabase.FindAssets("t:InventoryItemData");
         foreach (var guid in guids)
         {

@@ -15,4 +15,41 @@ MonoBehaviour:
   Id: pizza_01
   DisplayName: Pizza
   Tags: 4
+  Type: 1
+  Description: 
   Icon: {fileID: 21300000, guid: c6944d621dd7a7f409016d638cad9116, type: 3}
+  HeldPrefab: {fileID: 0}
+  HeldRotationOffset: {x: 0, y: 0, z: 0}
+  HeldScaleOverride: {x: 0, y: 0, z: 0}
+  Damage: 10
+  AttackRange: 2
+  AttackRadius: 1.5
+  AttackCooldown: 0.5
+  SwingAnimTrigger: SwordSwing
+  HealAmount: 25
+  EatDuration: 1.5
+  HealOverTime: 0
+  HealTickRate: 0.5
+  EatAnimTrigger: Eat
+  ThrowDamage: 20
+  ThrowForce: 15
+  ThrowRadius: 3
+  ExplodesOnImpact: 0
+  ThrowAnimTrigger: Throw
+  LightRadius: 5
+  RequiresTarget: 0
+  UseAnimTrigger: Use
+  BoostsSpeed: 0
+  SpeedBoostAmount: 2
+  BoostsDamage: 0
+  DamageBoostAmount: 5
+  EffectDuration: 5
+  ConsumeAnimTrigger: Drink
+  EmitsLight: 0
+  PassiveLightRadius: 4
+  GrantsPassiveBuff: 0
+  PassiveBuffAmount: 0
+  IsStackable: 0
+  MaxStackSize: 1
+  Weight: 1
+  IsDestroyedOnUse: 0

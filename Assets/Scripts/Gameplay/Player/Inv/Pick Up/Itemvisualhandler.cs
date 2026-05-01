@@ -2,18 +2,20 @@ using UnityEngine;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ItemVisualHandler.cs
-// Attach to your player GameObject alongside InventoryBehaviour.
+// Attach to the player GameObject alongside InventoryBehaviour.
 //
 // Works in two modes:
-//  1. Rigged character - assign the LeftHandBone transform in the inspector
-//  (e.g. drag the LeftHandBone from your character's hierarchy)
-//  2. Capsule / no rig = leave LeftHandBone empty, it will create an anchor automatically positioned to the left of the player.
-//  Swap it for the real bone later without changing any code.
+//   1. Rigged character — assign LeftHandBone in the Inspector
+//   2. Capsule / no rig — leave LeftHandBone empty, creates an anchor automatically
+//      Swap it for the real bone later with no code changes needed.
+//
+// Mirror compatible — retries finding the local inventory until it's ready.
 // ─────────────────────────────────────────────────────────────────────────────
 public class ItemVisualHandler : MonoBehaviour
 {
-    [Header("Hand Anchor - Rigged Cjaracter")]
-    [Tooltip("Drag the LeftHand bone here when you have a rigged character. " + "Leave empty to use the auto-generated anchor instead.")]
+    [Header("Hand Anchor — Rigged Character")]
+    [Tooltip("Drag the LeftHand bone here when you have a rigged character. " +
+             "Leave empty to use the auto-generated anchor instead.")]
     public Transform LeftHandBone;
 
     [Header("Capsule / No Rig Fallback")]
@@ -21,35 +23,58 @@ public class ItemVisualHandler : MonoBehaviour
     public Vector3 LeftHandOffset = new Vector3(-0.6f, 0.8f, 0.3f);
 
     [Header("Item Spawn Settings")]
-    [Tooltip("Scale applied to the item prefab when held. Adjust per-item via InventoryItemData.")]
-    public Vector3 HeldScale = Vector3.one;
-    public Vector3 HeldRotation = Vector3.zero; // Euler offset so item faces the right way
+    [Tooltip("Default scale applied to the held prefab. Override per-item in InventoryItemData.")]
+    public Vector3 HeldScale    = Vector3.one;
+    [Tooltip("Default rotation applied to the held prefab. Override per-item in InventoryItemData.")]
+    public Vector3 HeldRotation = Vector3.zero;
 
     // ── Internal ──────────────────────────────────────────────────────────────
     private InventoryBehaviour _inventory;
-    private Transform _leftAnchor;
-    private GameObject _leftHandVisual; // Currently spawned off-hand prefab
+    private Transform          _leftAnchor;
+    private GameObject         _leftHandVisual;
+    private bool               _isLocalPlayer = false;
+    private bool               _initialized   = false;
 
     // ─────────────────────────────────────────────────────────────────────────
     private void Start()
     {
-        _inventory = GetComponent<InventoryBehaviour>();
-        if (_inventory == null)
-        {
-            Debug.LogError("[ItemVisualHandler] No InventoryBehaviour on this GameObject.");
+        // Check if this is the local player
+        var ni = GetComponent<Mirror.NetworkIdentity>();
+        if (ni != null && !ni.isLocalPlayer)
             return;
-        }
 
+        _isLocalPlayer = true;
         SetupLeftAnchor();
+    }
 
-        // Subscribe to off-hand slot changes
+    private void Update()
+    {
+        if (!_isLocalPlayer) return;
+        if (_initialized) return;
+        TryInitialize();
+    }
+
+    private void TryInitialize()
+    {
+        _inventory = GetComponent<InventoryBehaviour>();
+        if (_inventory == null) return;
+        if (_inventory.Inventory == null) return;
+
+        // Subscribe to off-hand changes
         _inventory.Inventory.OffHand.OnChanged += OnOffHandChanged;
+
+        // If something is already in the off-hand, spawn it
+        if (!_inventory.Inventory.OffHand.IsEmpty)
+            SpawnVisual(_inventory.Inventory.OffHand.Item);
+
+        _initialized = true;
     }
 
     private void OnDestroy()
     {
-        if (_inventory != null)
-            _inventory.Inventory.OffHand.OnChanged -= OnOffHandChanged;
+        if (!_isLocalPlayer) return;
+        if (_inventory?.Inventory == null) return;
+        _inventory.Inventory.OffHand.OnChanged -= OnOffHandChanged;
     }
 
     // ── Anchor setup ──────────────────────────────────────────────────────────
@@ -58,18 +83,17 @@ public class ItemVisualHandler : MonoBehaviour
     {
         if (LeftHandBone != null)
         {
-            // Use the real bone directly
             _leftAnchor = LeftHandBone;
             Debug.Log("[ItemVisualHandler] Using rigged LeftHandBone as anchor.");
         }
         else
         {
-            // Create a placeholder anchor - swap LeftHandBone in later and it'll automatically switch without needing to change anything else
             var anchorGO = new GameObject("LeftHandAnchor");
             anchorGO.transform.SetParent(transform, false);
             anchorGO.transform.localPosition = LeftHandOffset;
             _leftAnchor = anchorGO.transform;
-            Debug.Log("[ItemVisualHandler] No LeftHandBone assigned - created LeftHandAnchor. " + "Assign the bone in the Inspector when your character is rigged.");
+            Debug.Log("[ItemVisualHandler] No LeftHandBone assigned — using LeftHandAnchor. " +
+                      "Assign the real bone in the Inspector when your character is rigged.");
         }
     }
 
@@ -77,14 +101,14 @@ public class ItemVisualHandler : MonoBehaviour
 
     private void OnOffHandChanged(InventoryItem old, InventoryItem @new)
     {
-        // Destroy the old visual
+        // Destroy the current visual
         if (_leftHandVisual != null)
         {
             Destroy(_leftHandVisual);
             _leftHandVisual = null;
         }
 
-        // Spawn the new one
+        // Spawn the new one if something was equipped
         if (@new != null)
             SpawnVisual(@new);
     }
@@ -93,47 +117,61 @@ public class ItemVisualHandler : MonoBehaviour
 
     private void SpawnVisual(InventoryItem item)
     {
-        // Find the matching InventoryItemData to get the prefab
+        if (_leftAnchor == null)
+        {
+            Debug.LogWarning("[ItemVisualHandler] No left anchor set up yet.");
+            return;
+        }
+
         var data = FindItemData(item.Id);
         if (data == null)
         {
-            Debug.LogWarning($"[ItemVisualHandler] '{item.Id}' has no HeldPrefab assigned in its InventoryItemData.");
+            Debug.LogWarning($"[ItemVisualHandler] No InventoryItemData found for id '{item.Id}'.");
+            return;
+        }
+
+        if (data.HeldPrefab == null)
+        {
+            Debug.LogWarning($"[ItemVisualHandler] '{item.DisplayName}' has no HeldPrefab assigned in its InventoryItemData. " +
+                             "Assign the prefab in the Inspector.");
             return;
         }
 
         _leftHandVisual = Instantiate(data.HeldPrefab, _leftAnchor);
         _leftHandVisual.transform.localPosition = Vector3.zero;
-        _leftHandVisual.transform.localRotation = Quaternion.Euler(data.HeldRotationOffset != Vector3.zero ? data.HeldRotationOffset : HeldRotation);
-        _leftHandVisual.transform.localScale = data.HeldScaleOverride != Vector3.zero ? data.HeldScaleOverride : HeldScale;
+        _leftHandVisual.transform.localRotation = Quaternion.Euler(
+            data.HeldRotationOffset != Vector3.zero ? data.HeldRotationOffset : HeldRotation);
+        _leftHandVisual.transform.localScale =
+            data.HeldScaleOverride != Vector3.zero ? data.HeldScaleOverride : HeldScale;
 
-        // Make sure the visual can't be interacted with as a pickup
+        // Remove pickup component so it can't be picked up again
         var pickup = _leftHandVisual.GetComponent<ItemPickup>();
         if (pickup != null) Destroy(pickup);
 
-        // Disable any colliders so it doesn't block movement
+        // Disable colliders so it doesn't block movement
         foreach (var col in _leftHandVisual.GetComponentsInChildren<Collider>())
             col.enabled = false;
 
-            Debug.Log($"[ItemVisualHandler] Spawned visual for {item.DisplayName} in left hand.");
+        Debug.Log($"[ItemVisualHandler] Spawned '{item.DisplayName}' in left hand.");
     }
 
     // ── Item data lookup ──────────────────────────────────────────────────────
 
     private static InventoryItemData FindItemData(string itemId)
     {
-        #if UNITY_EDITOR
-            var guids = UnityEditor.AssetDatabase.FindAssets("t:InventoryItemData");
-            foreach (var guid in guids)
-            {
-                var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
-                var data = UnityEditor.AssetDatabase.LoadAssetAtPath<InventoryItemData>(path);
-                if (data != null && data.Id == itemId) return data;
-            }
-        #else
-            var all = Resources.LoadAll<InventoryItemData>("Items");
-            foreach (var data in all)
-                if (data.Id == itemId) return data;
-        #endif
+        var all = Resources.LoadAll<InventoryItemData>("");
+        foreach (var data in all)
+            if (data != null && data.Id == itemId) return data;
+
+#if UNITY_EDITOR
+        var guids = UnityEditor.AssetDatabase.FindAssets("t:InventoryItemData");
+        foreach (var guid in guids)
+        {
+            var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+            var data = UnityEditor.AssetDatabase.LoadAssetAtPath<InventoryItemData>(path);
+            if (data != null && data.Id == itemId) return data;
+        }
+#endif
         return null;
     }
 }
